@@ -5,12 +5,23 @@
 # Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
-
+#Libreria UI
 from PyQt5 import QtCore, QtGui, QtWidgets
 from pyqtgraph import GraphicsLayoutWidget
 import pandas
 from PyQt5.QtGui import QPixmap
 import os
+import sys
+#Librerias Reporte
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph, Image, Table, TableStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.graphics.shapes import Drawing
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.graphics.charts.lineplots import LinePlot
+import random
 
 class Ui_MainWindow(object):
 
@@ -79,15 +90,7 @@ class Ui_MainWindow(object):
         self.graphicsView = self.graphicsView.addPlot(row=1, col=1)
 
     def generatedReport(self,df):
-        from reportlab.lib.styles import getSampleStyleSheet
-        from reportlab.lib import colors
-        from reportlab.lib.units import inch
-        from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph, Image, Table, TableStyle
-        from reportlab.pdfbase import pdfmetrics
-        from reportlab.graphics.shapes import Drawing
-        from reportlab.pdfbase.ttfonts import TTFont
-        from reportlab.graphics.charts.lineplots import LinePlot
-        import random
+
 
         #Image
         filename = './cap.png'
