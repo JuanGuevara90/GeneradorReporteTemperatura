@@ -31,25 +31,22 @@ class Ui_MainWindow(object):
 
 
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1350, 747)
+        MainWindow.resize(1000, 747)
         #MainWindow.setStyleSheet("background-color: blue;")
         
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.pushButtonAbrir = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButtonAbrir.setGeometry(QtCore.QRect(280, 10, 300, 32))
+        self.pushButtonAbrir.setGeometry(QtCore.QRect(280, 30, 300, 32))
         self.pushButtonAbrir.setObjectName("pushButtonAbrir")
 
 
         self.graphicsView = GraphicsLayoutWidget(self.centralwidget)
-        self.graphicsView.setGeometry(QtCore.QRect(750, 230, 585, 370))
+        self.graphicsView.setGeometry(QtCore.QRect(100, 100, 800, 600))
         self.graphicsView.setObjectName("graphicsView")
-
-
-        
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 863, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 100, 22))
         self.menubar.setObjectName("menubar")
     
         MainWindow.setMenuBar(self.menubar)
@@ -59,13 +56,8 @@ class Ui_MainWindow(object):
         
         self.retranslateUi(MainWindow)
         self.pushButtonAbrir.clicked.connect(self.mybutton_clicked)
-
-        #Cajas de texto
-
-        
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-        
 
 
 
@@ -86,7 +78,7 @@ class Ui_MainWindow(object):
 
             self.graphicsView.setLabel("bottom", "Tiempo / Centigrado")
 
-            self.generatedReport(df,persona,values_ST_T,contPuls/2)
+            self.generatedReport(df)
         except NameError:
             print("error: "+NameError)
 
