@@ -1,4 +1,6 @@
-# -*- coding: utf-8 -*-
+# -- coding: utf-8 --
+
+#Cambio recien 
 
 # Form implementation generated from reading ui file 'main.ui'
 #
@@ -22,6 +24,7 @@ from reportlab.graphics.shapes import Drawing
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.graphics.charts.lineplots import LinePlot
 import random
+from datetime import datetime
 
 class Ui_MainWindow(object):
 
@@ -29,7 +32,10 @@ class Ui_MainWindow(object):
         self.N_='n'
         self.FECHA_='fecha'
         self.HORA_='hora'
-        self.TEMPERATURA_='temperatura'
+        self.TEMPERATURA_='Temp1'
+        self.TEMPERATURA2_='Temp2'
+        self.TEMPERATURA3_='Temp3'
+        self.TEMPERATURA4_='Temp4'
 
     def setupUi(self, MainWindow):
         try:
@@ -75,7 +81,15 @@ class Ui_MainWindow(object):
             filename= QtWidgets.QFileDialog.getOpenFileName()
             df = pandas.read_csv(filename[0])
             #Graficar valores
-            self.graphicsView.plot(x=(df['n']), y=df[self.TEMPERATURA_], pen='#2196F3')
+            x=(df['n'])
+            y=df[self.TEMPERATURA_]
+            y2=df[self.TEMPERATURA2_]
+            y3=df[self.TEMPERATURA3_]
+            y4=df[self.TEMPERATURA4_]
+            self.graphicsView.plot(x, y,pen='#2196F3')
+            self.graphicsView.plot(x, y2,pen='#eff321')
+            self.graphicsView.plot(x, y3,pen='#f32121')
+            self.graphicsView.plot(x, y4,pen='#21f340')
             self.graphicsView.setLabel("bottom", "Tiempo / Centigrado")
             #Generar reporte
             self.generatedReport(df)
@@ -84,7 +98,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "RECAHOLT"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "TEMPERATURA"))
         MainWindow.setWindowIcon(QtGui.QIcon('ico.png'))
         self.pushButtonAbrir.setText(_translate("MainWindow", "Open file and report generator"))
         self.graphicsView = self.graphicsView.addPlot(row=1, col=1)
@@ -95,44 +109,100 @@ class Ui_MainWindow(object):
         #Image
         filename = './cap.png'
 
-        pdfmetrics.registerFont(TTFont('chsFont', 'STHeiti Light.ttc'))
+        #pdfmetrics.registerFont(TTFont('chsFont', 'STHeiti Light.ttc'))
         stylesheet = getSampleStyleSheet()
 
         elements = []
-        doc = SimpleDocTemplate("demo2.pdf")
+        doc = SimpleDocTemplate("Reporte_"+str(datetime.today().strftime('%Y-%m-%d'))+"_.pdf")
 
         #Imagen
-        elements.append(Image(filename, width=1*inch, height=1*inch))
-        elements.append(Spacer(1,1*inch))
+        #elements.append(Image(filename, width=1*inch, height=1*inch))
+        #elements.append(Spacer(1,1*inch))
 
         #Titulo
         elements.append(Paragraph('<font >REPORTE DE TEMPERATURA</font>', stylesheet['Title']))
         elements.append(Spacer(1,1*inch))
 
         #Descripcion
-        elements.append(Paragraph('<font color=red >Que tal</font>', stylesheet['BodyText']))
+        elements.append(Paragraph('<font color=red >MADERAS DEL ORIENTE</font>', stylesheet['BodyText']))
+        elements.append(Spacer(1,1*inch))
+        elements.append(Spacer(1,1*inch))
 
-        #Grafico
+        #Datos para el Gráfico
+
+        lista_temp1=[]
+        lista_temp2=[]
+        lista_temp3=[]
+        lista_temp4=[]
+        lista_total=[]
+        lista_temp1.append((0,0))
+        lista_temp2.append((0,0))
+        lista_temp3.append((0,0))
+        lista_temp4.append((0,0))
+
+        data_table= []
+        cabecera=[]
+        cabecera.append('No')
+        cabecera.append('Fecha')
+        cabecera.append('Hora')
+        cabecera.append('Temp 1')
+        cabecera.append('Temp 2')
+        cabecera.append('Temp 3')
+        cabecera.append('Temp 4')
+        data_table.append(cabecera)
+
+        
+        for index, row in df.iterrows():
+            c_1= (row['n'],row['Temp1'])
+            c_2= (row['n'],row['Temp2'])
+            c_3= (row['n'],row['Temp3'])
+            c_4= (row['n'],row['Temp4'])
+            lista_temp1.append(c_1)
+            lista_temp2.append(c_2)
+            lista_temp3.append(c_3)
+            lista_temp4.append(c_4)
+            array_aux=[]
+            array_aux.append(row['n'])
+            array_aux.append(row['Fecha'])
+            array_aux.append(row['Hora'])
+            array_aux.append(row['Temp1'])
+            array_aux.append(row['Temp2'])
+            array_aux.append(row['Temp3'])
+            array_aux.append(row['Temp4'])
+            data_table.append(array_aux)
+
+        lista_total.append(lista_temp1)
+        lista_total.append(lista_temp2)
+        lista_total.append(lista_temp3)
+        lista_total.append(lista_temp4)
+
+        
+
+
+
         drawing = Drawing(400, 200)
-        data = [
-        ((1,1), (2,2), (2.5,1), (3,3), (4,5)), 
-        ]
         lp = LinePlot()
-        lp.x = 50
-        lp.y = 50
-        lp.height = 125
+        lp.x = 100
+        lp.y = 100
+        lp.height = 100
         lp.width = 300
-        lp.data = data
+        lp.data = lista_total
         lp.joinedLines = 1
         #lp.lineLabelFormat = '%2.0f' 
         lp.strokeColor = colors.black
         lp.xValueAxis.valueMin = 0 
-        lp.xValueAxis.valueMax = 20
+        lp.xValueAxis.valueMax = 5000
+        lp.xValueAxis.valueStep = 1000
         #lp.xValueAxis.valueSteps = [1, 2, 2.5, 3, 4, 5] 
         lp.xValueAxis.labelTextFormat = '%2.1f'
         lp.yValueAxis.valueMin = 0 
-        lp.yValueAxis.valueMax = 7 
-        lp.yValueAxis.valueStep = 1
+        lp.yValueAxis.valueMax = 90 
+        lp.yValueAxis.valueStep = 10
+        lp.lines[0].strokeColor=  colors.red
+        lp.lines[1].strokeColor=  colors.blue
+        lp.lines[2].strokeColor=  colors.black
+        lp.lines[3].strokeColor=  colors.green
+
         drawing.add(lp)
 
         elements.append(drawing)
@@ -140,28 +210,14 @@ class Ui_MainWindow(object):
         #Tabla
 
         style_table = TableStyle([
-            ('BACKGROUND',(0,0),(3,0),colors.green),
+            ('BACKGROUND',(0,0),(6,0),colors.green),
             ('TEXTCOLOR',(0,0),(-1,0),colors.whitesmoke),
             ('ALIGN',(0,0),(3,120),'CENTER'),
             ('FONTNAME',(0,0),(-1,0),'Courier-Bold')
 
         ])
 
-        data_table=[
-            ['No', 'Fecha', 'Hora','Temperatura / Centigrados'],
-            [1,'2/1/2020','12:00',20],
-            [1,'2/1/2020','12:00',20],
-            [1,'2/1/2020','12:00',20],
-            [1,'2/1/2020','12:00',20],
-            [1,'2/1/2020','12:00',20],
-            [1,'2/1/2020','12:00',20],
-            [1,'2/1/2020','12:00',20],
-            [1,'2/1/2020','12:00',20],
-            [1,'2/1/2020','12:00',20],
-            [1,'2/1/2020','12:00',20],
-            [1,'2/1/2020','12:00',20],
-            [2,'2/1/2020','12:00',20],
-        ]
+        
         table = Table(data_table)
         table.setStyle(style_table)
         elements.append(table)
@@ -170,11 +226,10 @@ class Ui_MainWindow(object):
         elements.append(Spacer(1,1*inch))
 
         #Firma
-        elements.append(Paragraph('<font name="chsFont">Hola</font>', stylesheet['Title']))
+        #elements.append(Paragraph('<font >Hola</font>', stylesheet['Title']))
         elements.append(Spacer(1,1*inch))
 
         doc.build(elements)
-
 
 if __name__ == "__main__":
     import sys
