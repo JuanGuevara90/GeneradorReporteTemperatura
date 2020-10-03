@@ -23,6 +23,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.graphics.shapes import Drawing
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.graphics.charts.lineplots import LinePlot
+from reportlab.graphics.charts.linecharts import HorizontalLineChart
 import random
 from datetime import datetime
 
@@ -43,28 +44,34 @@ class Ui_MainWindow(object):
         except Exception:
             base_path=os.path.abspath(".")
         
-        path1 = os.path.join(base_path, "imagen1.jpeg")
-        path2 = os.path.join(base_path, "imagen2.jpeg")
-
-
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1000, 747)
+        MainWindow.resize(1500, 900)
         #MainWindow.setStyleSheet("background-color: blue;")
         
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.pushButtonAbrir = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButtonAbrir.setGeometry(QtCore.QRect(280, 30, 300, 32))
+        self.pushButtonAbrir.setGeometry(QtCore.QRect(440, 25, 300, 42))
         self.pushButtonAbrir.setObjectName("pushButtonAbrir")
 
+        self.label_cod = QtWidgets.QLabel(self.centralwidget)
+        self.label_cod.setGeometry(QtCore.QRect(100, 35, 50, 20))
+        self.label_cod.setObjectName("label_cod")
+
+        self.line_cod = QtWidgets.QLineEdit(self.centralwidget)
+        self.line_cod.resize(200, 32)
+        self.line_cod.move(160, 27)
+    
+
         self.graphicsView = GraphicsLayoutWidget(self.centralwidget)
-        self.graphicsView.setGeometry(QtCore.QRect(100, 100, 800, 600))
+        self.graphicsView.setGeometry(QtCore.QRect(100, 100, 1300, 700))
         self.graphicsView.setObjectName("graphicsView")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 100, 22))
         self.menubar.setObjectName("menubar")
-    
+
+        
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -81,7 +88,15 @@ class Ui_MainWindow(object):
             filename= QtWidgets.QFileDialog.getOpenFileName()
             df = pandas.read_csv(filename[0])
             #Graficar valores
-            x=(df['n'])
+            const= df['Hora'][0]
+            tiempo_aux=[]
+            format = '%H:%M:%S'
+            for index, row in df.iterrows():
+                diff = (datetime.strptime(str(row['Hora']), format) - datetime.strptime(str(const), format))/60
+                total_minu = round(diff.total_seconds(),1)
+                tiempo_aux.append(total_minu)
+            
+            x=tiempo_aux
             y=df[self.TEMPERATURA_]
             y2=df[self.TEMPERATURA2_]
             y3=df[self.TEMPERATURA3_]
@@ -90,7 +105,7 @@ class Ui_MainWindow(object):
             self.graphicsView.plot(x, y2,pen='#eff321')
             self.graphicsView.plot(x, y3,pen='#f32121')
             self.graphicsView.plot(x, y4,pen='#21f340')
-            self.graphicsView.setLabel("bottom", "Tiempo / Centigrado")
+            self.graphicsView.setLabel("bottom", "X = Tiempo (Minutos) / Y = Grados (Centigrados)")
             #Generar reporte
             self.generatedReport(df)
         except NameError:
@@ -100,12 +115,13 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "TEMPERATURA"))
         MainWindow.setWindowIcon(QtGui.QIcon('ico.png'))
-        self.pushButtonAbrir.setText(_translate("MainWindow", "Open file and report generator"))
+        self.pushButtonAbrir.setText(_translate("MainWindow", "Abrir archivo y generar reporte"))
         self.graphicsView = self.graphicsView.addPlot(row=1, col=1)
+        self.label_cod.setText(_translate("MainWindow", "Código:"))
 
     def generatedReport(self,df):
 
-
+        codigo_text= self.line_cod.text()
         #Image
         filename = './cap.png'
 
@@ -113,7 +129,17 @@ class Ui_MainWindow(object):
         stylesheet = getSampleStyleSheet()
 
         elements = []
-        doc = SimpleDocTemplate("Reporte_"+str(datetime.today().strftime('%Y-%m-%d'))+"_.pdf")
+        try:
+            base_path= sys._MEIPASS
+        except Exception:
+            base_path=os.path.abspath(".")
+        
+        fecha= str(datetime.today().strftime('%Y-%m-%d'))
+
+        address= "Reporte_"+fecha+"_.pdf"
+        path = os.path.join(base_path, address)
+
+        doc = SimpleDocTemplate(path)
 
         #Imagen
         #elements.append(Image(filename, width=1*inch, height=1*inch))
@@ -125,7 +151,12 @@ class Ui_MainWindow(object):
 
         #Descripcion
         elements.append(Paragraph('<font color=red >MADERAS DEL ORIENTE</font>', stylesheet['BodyText']))
-        elements.append(Spacer(1,1*inch))
+        elements.append(Paragraph('<font >Código:  '+codigo_text+'</font>', stylesheet['BodyText']))
+        elements.append(Paragraph('<font >Fecha:  '+fecha+'</font>', stylesheet['BodyText']))
+        elements.append(Paragraph('<font ></font>', stylesheet['BodyText']))
+        #Descripcion Ejes
+        elements.append(Paragraph('<font color=blue>Eje Y = Grados Centigrados</font>', stylesheet['BodyText']))
+        elements.append(Paragraph('<font color=blue>Eje X = Tiempo Minutos</font>', stylesheet['BodyText']))
         elements.append(Spacer(1,1*inch))
 
         #Datos para el Gráfico
@@ -135,10 +166,6 @@ class Ui_MainWindow(object):
         lista_temp3=[]
         lista_temp4=[]
         lista_total=[]
-        lista_temp1.append((0,0))
-        lista_temp2.append((0,0))
-        lista_temp3.append((0,0))
-        lista_temp4.append((0,0))
 
         data_table= []
         cabecera=[]
@@ -149,14 +176,21 @@ class Ui_MainWindow(object):
         cabecera.append('Temp 2')
         cabecera.append('Temp 3')
         cabecera.append('Temp 4')
+        cabecera.append('Tiempo / Minutos')
         data_table.append(cabecera)
 
-        
+        print(df['Hora'][0])
+
+        const= df['Hora'][0]
+
+        format = '%H:%M:%S'
         for index, row in df.iterrows():
-            c_1= (row['n'],row['Temp1'])
-            c_2= (row['n'],row['Temp2'])
-            c_3= (row['n'],row['Temp3'])
-            c_4= (row['n'],row['Temp4'])
+            diff = (datetime.strptime(str(row['Hora']), format) - datetime.strptime(str(const), format))/60
+            total_minu = round(diff.total_seconds(),1)
+            c_1= (total_minu,row['Temp1'])
+            c_2= (total_minu,row['Temp2'])
+            c_3= (total_minu,row['Temp3'])
+            c_4= (total_minu,row['Temp4'])
             lista_temp1.append(c_1)
             lista_temp2.append(c_2)
             lista_temp3.append(c_3)
@@ -169,6 +203,7 @@ class Ui_MainWindow(object):
             array_aux.append(row['Temp2'])
             array_aux.append(row['Temp3'])
             array_aux.append(row['Temp4'])
+            array_aux.append(total_minu)
             data_table.append(array_aux)
 
         lista_total.append(lista_temp1)
@@ -176,32 +211,32 @@ class Ui_MainWindow(object):
         lista_total.append(lista_temp3)
         lista_total.append(lista_temp4)
 
-        
-
-
+        elements.append(Spacer(1,1*inch))
+        elements.append(Spacer(1,1*inch))
 
         drawing = Drawing(400, 200)
         lp = LinePlot()
         lp.x = 100
         lp.y = 100
-        lp.height = 100
+        lp.height = 300
         lp.width = 300
         lp.data = lista_total
         lp.joinedLines = 1
         #lp.lineLabelFormat = '%2.0f' 
         lp.strokeColor = colors.black
         lp.xValueAxis.valueMin = 0 
-        lp.xValueAxis.valueMax = 5000
-        lp.xValueAxis.valueStep = 1000
-        #lp.xValueAxis.valueSteps = [1, 2, 2.5, 3, 4, 5] 
+        lp.xValueAxis.valueMax = 100
+        lp.xValueAxis.valueStep = 10
+        #lp.xValueAxis.valueSteps =listHora_aux
         lp.xValueAxis.labelTextFormat = '%2.1f'
         lp.yValueAxis.valueMin = 0 
         lp.yValueAxis.valueMax = 90 
-        lp.yValueAxis.valueStep = 10
+        lp.yValueAxis.valueStep = 5
         lp.lines[0].strokeColor=  colors.red
         lp.lines[1].strokeColor=  colors.blue
         lp.lines[2].strokeColor=  colors.black
         lp.lines[3].strokeColor=  colors.green
+        #lp.xValueAxis.valueSteps = listHora_aux
 
         drawing.add(lp)
 
@@ -210,14 +245,13 @@ class Ui_MainWindow(object):
         #Tabla
 
         style_table = TableStyle([
-            ('BACKGROUND',(0,0),(6,0),colors.green),
+            ('BACKGROUND',(0,0),(7,0),colors.green),
             ('TEXTCOLOR',(0,0),(-1,0),colors.whitesmoke),
-            ('ALIGN',(0,0),(3,120),'CENTER'),
+            ('ALIGN',(0,0),(7,120),'CENTER'),
             ('FONTNAME',(0,0),(-1,0),'Courier-Bold')
 
         ])
 
-        
         table = Table(data_table)
         table.setStyle(style_table)
         elements.append(table)
