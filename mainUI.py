@@ -265,11 +265,14 @@ class Ui_MainWindow(object):
 
         doc.build(elements)
 
-if __name__ == "__main__":
-    import sys
+#if __name__ == "__main__":
+#    import sys
+def main():
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
+
+main()
