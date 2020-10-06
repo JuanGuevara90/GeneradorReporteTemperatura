@@ -86,6 +86,7 @@ class Ui_MainWindow(object):
             #Nombre de encabezados del archivo CSV
             self.variables()
             filename= QtWidgets.QFileDialog.getOpenFileName()
+            dirReport=os.path.dirname(filename[0])
             df = pandas.read_csv(filename[0])
             #Graficar valores
             const= df['Hora'][0]
@@ -107,7 +108,7 @@ class Ui_MainWindow(object):
             self.graphicsView.plot(x, y4,pen='#21f340')
             self.graphicsView.setLabel("bottom", "X = Tiempo (Minutos) / Y = Grados (Centigrados)")
             #Generar reporte
-            self.generatedReport(df)
+            self.generatedReport(df,dirReport)
         except NameError:
             print("error: "+NameError)
 
@@ -119,7 +120,7 @@ class Ui_MainWindow(object):
         self.graphicsView = self.graphicsView.addPlot(row=1, col=1)
         self.label_cod.setText(_translate("MainWindow", "Código:"))
 
-    def generatedReport(self,df):
+    def generatedReport(self,df,dirReport):
 
         codigo_text= self.line_cod.text()
         #Image
@@ -137,7 +138,7 @@ class Ui_MainWindow(object):
         fecha= str(datetime.today().strftime('%Y-%m-%d'))
 
         address= "Reporte_"+fecha+"_.pdf"
-        path = os.path.join(base_path, address)
+        path = os.path.join(dirReport, address)
 
         doc = SimpleDocTemplate(path)
 
@@ -178,8 +179,6 @@ class Ui_MainWindow(object):
         cabecera.append('Temp 4')
         cabecera.append('Tiempo / Minutos')
         data_table.append(cabecera)
-
-        print(df['Hora'][0])
 
         const= df['Hora'][0]
 
