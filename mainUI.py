@@ -103,6 +103,12 @@ class Ui_MainWindow(object):
         self.label_sensor4.setFont(QtGui.QFont("Times", 22, QtGui.QFont.Bold))
         self.label_sensor4.setStyleSheet('color: green')
 
+        self.label_promedio = QtWidgets.QLabel(self.centralwidget)
+        self.label_promedio.setGeometry(QtCore.QRect(var_x+860,var_y, 150, 20))
+        self.label_promedio.setObjectName("label_promedio")
+        self.label_promedio.setFont(QtGui.QFont("Times", 22, QtGui.QFont.Bold))
+        self.label_promedio.setStyleSheet('color: brown')
+
         self.graphicsView = GraphicsLayoutWidget(self.centralwidget)
         self.graphicsView.setGeometry(QtCore.QRect(100, 100, 1300, 700))
         self.graphicsView.setObjectName("graphicsView")
@@ -141,20 +147,26 @@ class Ui_MainWindow(object):
                     const= df['Hora'][0]
                     tiempo_aux=[]
                     format = '%H:%M:%S'
+                    promedio=[]
                     for index, row in df.iterrows():
                         diff = (datetime.strptime(str(row['Hora']), format) - datetime.strptime(str(const), format))/60
                         total_minu = round(diff.total_seconds(),1)
                         tiempo_aux.append(total_minu)
+                        var_promedio = (row['Temp1'] + row['Temp2'] +row['Temp3'] + row['Temp4'])/4
+                        promedio.append(var_promedio)
+
                     
                     x=tiempo_aux
                     y=df[self.TEMPERATURA_]
                     y2=df[self.TEMPERATURA2_]
                     y3=df[self.TEMPERATURA3_]
                     y4=df[self.TEMPERATURA4_]
+                    y5=promedio
                     self.graphicsView.plot(x, y,pen='#2196F3')
                     self.graphicsView.plot(x, y2,pen='#eff321')
                     self.graphicsView.plot(x, y3,pen='#f32121')
                     self.graphicsView.plot(x, y4,pen='#21f340')
+                    self.graphicsView.plot(x, y5,pen='#b97d33')
                     self.graphicsView.setLabel("bottom", "X = Tiempo (Minutos) / Y = Grados (Centigrados)")
                     #Generar reporte
                     self.generatedReport(df,dirReport)
@@ -165,6 +177,7 @@ class Ui_MainWindow(object):
         except Exception as e:
             msg.setText("Por favor seleccione el archivo correcto")
             x = msg.exec_()
+            print(e)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -178,6 +191,7 @@ class Ui_MainWindow(object):
         self.label_sensor2.setText(_translate("MainWindow", "--- Sensor #2 ---"))
         self.label_sensor3.setText(_translate("MainWindow", "--- Sensor #3 ---"))
         self.label_sensor4.setText(_translate("MainWindow", "--- Sensor #4 ---"))
+        self.label_promedio.setText(_translate("MainWindow", "--- Promedio ---"))
 
     def generatedReport(self,df,dirReport):
 
@@ -186,7 +200,6 @@ class Ui_MainWindow(object):
         codigo_text = self.line_cod.text()
 
         #Image
-        fileImage = './cap.jpeg'
 
         #pdfmetrics.registerFont(TTFont('chsFont', 'STHeiti Light.ttc'))
         stylesheet = getSampleStyleSheet()
@@ -202,10 +215,12 @@ class Ui_MainWindow(object):
         address= "Reporte_"+fecha+"_.pdf"
         path = os.path.join(dirReport, address)
 
+        path2= os.path.join(base_path,"cap.jpeg")
+
         doc = SimpleDocTemplate(path)
 
         #Imagen
-        elements.append(Image(fileImage, width=1*inch, height=1*inch))
+        elements.append(Image(path2, width=1*inch, height=1*inch))
 
         #Titulo
         elements.append(Paragraph('<font >REPORTE DE TEMPERATURA</font>', stylesheet['Title']))
@@ -219,7 +234,7 @@ class Ui_MainWindow(object):
         #Descripcion Ejes
         elements.append(Paragraph('<font >DESCRIPCIÓN GRÁFICO</font>', stylesheet['BodyText']))
         elements.append(Paragraph('<font >      Eje Y = Grados Centigrados / Eje X = Tiempo Minutos</font>', stylesheet['BodyText']))
-        elements.append(Paragraph('<font color=blue>        -- Sensor #1 --</font> <font color=yellow>-- Sensor #2 --</font> <font color=red>-- Sensor #3 --</font> <font color=green>-- Sensor #4 --</font>', stylesheet['BodyText']))
+        elements.append(Paragraph('<font color=blue>        -- Sensor #1 --</font> <font color=yellow>-- Sensor #2 --</font> <font color=red>-- Sensor #3 --</font> <font color=green>-- Sensor #4 --</font> <font color=brown>-- Promedio --</font>', stylesheet['BodyText']))
         elements.append(Spacer(1,1*inch))
 
         
@@ -231,6 +246,7 @@ class Ui_MainWindow(object):
         lista_temp3=[]
         lista_temp4=[]
         lista_total=[]
+        promedio_=[]
 
         data_table= []
         cabecera=[]
@@ -242,6 +258,7 @@ class Ui_MainWindow(object):
         cabecera.append('Temp 3')
         cabecera.append('Temp 4')
         cabecera.append('Tiempo / Minutos')
+        cabecera.append('Promedio')
         data_table.append(cabecera)
 
         const= df['Hora'][0]
@@ -250,14 +267,19 @@ class Ui_MainWindow(object):
         for index, row in df.iterrows():
             diff = (datetime.strptime(str(row['Hora']), format) - datetime.strptime(str(const), format))/60
             total_minu = round(diff.total_seconds(),1)
+
+            var_promedio = (row['Temp1'] + row['Temp2'] +row['Temp3'] + row['Temp4'])/4
+            round_promedio= round(var_promedio,2)
             c_1= (total_minu,row['Temp1'])
             c_2= (total_minu,row['Temp2'])
             c_3= (total_minu,row['Temp3'])
             c_4= (total_minu,row['Temp4'])
+            c_5= (total_minu,round_promedio)
             lista_temp1.append(c_1)
             lista_temp2.append(c_2)
             lista_temp3.append(c_3)
             lista_temp4.append(c_4)
+            promedio_.append(c_5)
             array_aux=[]
             array_aux.append(row['n'])
             array_aux.append(row['Fecha'])
@@ -267,12 +289,15 @@ class Ui_MainWindow(object):
             array_aux.append(row['Temp3'])
             array_aux.append(row['Temp4'])
             array_aux.append(total_minu)
+            array_aux.append(round_promedio)
             data_table.append(array_aux)
+
 
         lista_total.append(lista_temp1)
         lista_total.append(lista_temp2)
         lista_total.append(lista_temp3)
         lista_total.append(lista_temp4)
+        lista_total.append(promedio_)
 
         elements.append(Spacer(1,1*inch))
         elements.append(Spacer(1,1*inch))
@@ -299,6 +324,7 @@ class Ui_MainWindow(object):
         lp.lines[1].strokeColor=  colors.yellow
         lp.lines[2].strokeColor=  colors.red
         lp.lines[3].strokeColor=  colors.green
+        lp.lines[4].strokeColor=  colors.brown
 
         drawing.add(lp)
 
@@ -309,9 +335,9 @@ class Ui_MainWindow(object):
         elements.append(Paragraph('<font ></font>', stylesheet['BodyText']))
 
         style_table = TableStyle([
-            ('BACKGROUND',(0,0),(7,0),colors.green),
+            ('BACKGROUND',(0,0),(8,0),colors.green),
             ('TEXTCOLOR',(0,0),(-1,0),colors.whitesmoke),
-            ('ALIGN',(0,0),(7,120),'CENTER'),
+            ('ALIGN',(0,0),(8,1000000),'CENTER'),
             ('FONTNAME',(0,0),(-1,0),'Courier-Bold')
 
         ])
