@@ -186,7 +186,7 @@ class Ui_MainWindow(object):
         codigo_text = self.line_cod.text()
 
         #Image
-        filename = './cap.png'
+        fileImage = './cap.jpeg'
 
         #pdfmetrics.registerFont(TTFont('chsFont', 'STHeiti Light.ttc'))
         stylesheet = getSampleStyleSheet()
@@ -205,8 +205,7 @@ class Ui_MainWindow(object):
         doc = SimpleDocTemplate(path)
 
         #Imagen
-        #elements.append(Image(filename, width=1*inch, height=1*inch))
-        #elements.append(Spacer(1,1*inch))
+        elements.append(Image(fileImage, width=1*inch, height=1*inch))
 
         #Titulo
         elements.append(Paragraph('<font >REPORTE DE TEMPERATURA</font>', stylesheet['Title']))
@@ -294,7 +293,7 @@ class Ui_MainWindow(object):
         #lp.xValueAxis.valueSteps =listHora_aux
         lp.xValueAxis.labelTextFormat = '%2.1f'
         lp.yValueAxis.valueMin = 0 
-        lp.yValueAxis.valueMax = 90 
+        lp.yValueAxis.valueMax = 180
         lp.yValueAxis.valueStep = 5
         lp.lines[0].strokeColor=  colors.blue
         lp.lines[1].strokeColor=  colors.yellow
