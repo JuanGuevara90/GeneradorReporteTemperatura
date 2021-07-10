@@ -39,6 +39,7 @@ class Ui_MainWindow(object):
         self.TEMPERATURA2_='Temp2'
         self.TEMPERATURA3_='Temp3'
         self.TEMPERATURA4_='Temp4'
+        self.HORNO=''
 
     def setupUi(self, MainWindow):
         try:
@@ -143,33 +144,8 @@ class Ui_MainWindow(object):
                 if filename[0]!='':
                     dirReport=os.path.dirname(filename[0])
                     df = pandas.read_csv(filename[0])
-                    #Graficar valores
-                    const= df['Hora'][0]
-                    tiempo_aux=[]
-                    format = '%H:%M:%S'
-                    promedio=[]
-                    for index, row in df.iterrows():
-                        diff = (datetime.strptime(str(row['Hora']), format) - datetime.strptime(str(const), format))/60
-                        total_minu = round(diff.total_seconds(),1)
-                        tiempo_aux.append(total_minu)
-                        var_promedio = (row['Temp1'] + row['Temp2'] +row['Temp3'] + row['Temp4'])/4
-                        promedio.append(var_promedio)
-
-                    
-                    x=tiempo_aux
-                    y=df[self.TEMPERATURA_]
-                    y2=df[self.TEMPERATURA2_]
-                    y3=df[self.TEMPERATURA3_]
-                    y4=df[self.TEMPERATURA4_]
-                    y5=promedio
-                    self.graphicsView.plot(x, y,pen='#2196F3')
-                    self.graphicsView.plot(x, y2,pen='#eff321')
-                    self.graphicsView.plot(x, y3,pen='#f32121')
-                    self.graphicsView.plot(x, y4,pen='#21f340')
-                    self.graphicsView.plot(x, y5,pen='#b97d33')
-                    self.graphicsView.setLabel("bottom", "X = Tiempo (Minutos) / Y = Grados (Centigrados)")
+                    self.MultipleHorno(df)
                     #Generar reporte
-                    self.generatedReport(df,dirReport)
                 else:
                     msg.setText("Por favor seleccionar el archivo CSV")
                     x = msg.exec_()
@@ -178,6 +154,43 @@ class Ui_MainWindow(object):
             msg.setText("Por favor seleccione el archivo correcto")
             x = msg.exec_()
             print(e)
+
+    def MultipleHorno(self,df):
+        #Graficar valores
+        
+        valores_horno= df['Horno'].drop_duplicates().count()
+        if(int(valores_horno)==1):
+            print("aqui")
+            const= df['Hora'][0]
+            self.Graficar(df,const)
+        else:
+            if(int(valores_horno)==2):
+                print("aqui 2")
+                df_horno1=df.loc[(df.Horno == 1)]
+                const_1= df_horno1['Hora'][0]
+                self.Graficar(df_horno1,const_1)
+                df_horno2=df.loc[(df.Horno == 2)]
+                const_2= df_horno2['Hora'][0]
+                self.Graficar(df_horno2,const_2)
+                
+
+    def Graficar(self,df,const):
+        tiempo_aux=[]
+        format = '%H:%M:%S'
+        promedio=[]
+        for index, row in df.iterrows():
+            diff = (datetime.strptime(str(row['Hora']), format) - datetime.strptime(str(const), format))/60
+            total_minu = round(diff.total_seconds(),1)
+            tiempo_aux.append(total_minu)
+            var_promedio = (row['Temp1'] + row['Temp2'] +row['Temp3'] + row['Temp4'])/4
+            promedio.append(var_promedio)
+
+        
+        x=tiempo_aux
+        y=promedio
+        self.graphicsView.plot(x, y,pen='#2196F3')
+        self.graphicsView.setLabel("bottom", "X = Tiempo (Minutos) / Y = Grados (Centigrados)")
+        self.generatedReport(df,dirReport)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -207,158 +220,160 @@ class Ui_MainWindow(object):
         elements = []
         try:
             base_path= sys._MEIPASS
-        except Exception:
+        except Exception as e:
+            print(e)
             base_path=os.path.abspath(".")
+
+        try:
+            fecha= str(datetime.today().strftime('%Y-%m-%d'))
+
+            address= "Reporte_"+fecha+"_.pdf"
+            path = os.path.join(dirReport, address)
+
+            path2= os.path.join(base_path,"cap.jpeg")
+
+            doc = SimpleDocTemplate(path)
+
+            #Imagen
+            elements.append(Image(path2, width=1*inch, height=1*inch))
+
+            #Titulo
+            elements.append(Paragraph('<font >REPORTE DE TEMPERATURA</font>', stylesheet['Title']))
+
+            #Descripcion
+            elements.append(Paragraph('<font >DATOS GENERALES</font>', stylesheet['BodyText']))
+            elements.append(Paragraph('<font >Empresa: '+nom_empre+'</font> <font >         Código:  '+codigo_text+'</font>', stylesheet['BodyText']))
+            elements.append(Paragraph('<font >Fecha:  '+fecha+'</font>', stylesheet['BodyText']))
+            elements.append(Paragraph('<font ></font>', stylesheet['BodyText']))
+            
+            #Descripcion Ejes
+            elements.append(Paragraph('<font >DESCRIPCIÓN GRÁFICO</font>', stylesheet['BodyText']))
+            elements.append(Paragraph('<font >      Eje Y = Grados Centigrados / Eje X = Tiempo Minutos</font>', stylesheet['BodyText']))
+            elements.append(Paragraph('<font color=blue>        -- Sensor #1 --</font> <font color=yellow>-- Sensor #2 --</font> <font color=red>-- Sensor #3 --</font> <font color=green>-- Sensor #4 --</font> <font color=brown>-- Promedio --</font>', stylesheet['BodyText']))
+            elements.append(Spacer(1,1*inch))
+
+            #Datos para el Gráfico
+            lista_temp1=[]
+            lista_temp2=[]
+            lista_temp3=[]
+            lista_temp4=[]
+            lista_total=[]
+            promedio_=[]
+
+            data_table= []
+            cabecera=[]
+            cabecera.append('No')
+            cabecera.append('Fecha')
+            cabecera.append('Hora')
+            cabecera.append('Temp 1')
+            cabecera.append('Temp 2')
+            cabecera.append('Temp 3')
+            cabecera.append('Temp 4')
+            cabecera.append('Tiempo / Minutos')
+            cabecera.append('Promedio')
+            data_table.append(cabecera)
+
+            const= df['Hora'][0]
+
+            format = '%H:%M:%S'
+            for index, row in df.iterrows():
+                diff = (datetime.strptime(str(row['Hora']), format) - datetime.strptime(str(const), format))/60
+                total_minu = round(diff.total_seconds(),1)
+
+                var_promedio = (row['Temp1'] + row['Temp2'] +row['Temp3'] + row['Temp4'])/4
+                round_promedio= round(var_promedio,2)
+                c_1= (total_minu,row['Temp1'])
+                c_2= (total_minu,row['Temp2'])
+                c_3= (total_minu,row['Temp3'])
+                c_4= (total_minu,row['Temp4'])
+                c_5= (total_minu,round_promedio)
+                lista_temp1.append(c_1)
+                lista_temp2.append(c_2)
+                lista_temp3.append(c_3)
+                lista_temp4.append(c_4)
+                promedio_.append(c_5)
+                array_aux=[]
+                array_aux.append(row['n'])
+                array_aux.append(row['Fecha'])
+                array_aux.append(row['Hora'])
+                array_aux.append(row['Temp1'])
+                array_aux.append(row['Temp2'])
+                array_aux.append(row['Temp3'])
+                array_aux.append(row['Temp4'])
+                array_aux.append(total_minu)
+                array_aux.append(round_promedio)
+                data_table.append(array_aux)
+
+
+            lista_total.append(lista_temp1)
+            lista_total.append(lista_temp2)
+            lista_total.append(lista_temp3)
+            lista_total.append(lista_temp4)
+            lista_total.append(promedio_)
+
+            elements.append(Spacer(1,1*inch))
+            elements.append(Spacer(1,1*inch))
+
+            drawing = Drawing(400, 200)
+            lp = LinePlot()
+            lp.x = 100
+            lp.y = 100
+            lp.height = 300
+            lp.width = 300
+            lp.data = lista_total
+            lp.joinedLines = 1
+            #lp.lineLabelFormat = '%2.0f' 
+            lp.strokeColor = colors.black
+            lp.xValueAxis.valueMin = 0 
+            lp.xValueAxis.valueMax = 100
+            lp.xValueAxis.valueStep = 10
+            #lp.xValueAxis.valueSteps =listHora_aux
+            lp.xValueAxis.labelTextFormat = '%2.1f'
+            lp.yValueAxis.valueMin = 0 
+            lp.yValueAxis.valueMax = 180
+            lp.yValueAxis.valueStep = 5
+            lp.lines[0].strokeColor=  colors.blue
+            lp.lines[1].strokeColor=  colors.yellow
+            lp.lines[2].strokeColor=  colors.red
+            lp.lines[3].strokeColor=  colors.green
+            lp.lines[4].strokeColor=  colors.brown
+
+            drawing.add(lp)
+
+            elements.append(drawing)
+
+            #Tabla
+            elements.append(Paragraph('<font >DESCRIPCIÓN TABLA</font>', stylesheet['BodyText']))
+            elements.append(Paragraph('<font ></font>', stylesheet['BodyText']))
+
+            style_table = TableStyle([
+                ('BACKGROUND',(0,0),(8,0),colors.green),
+                ('TEXTCOLOR',(0,0),(-1,0),colors.whitesmoke),
+                ('ALIGN',(0,0),(8,1000000),'CENTER'),
+                ('FONTNAME',(0,0),(-1,0),'Courier-Bold')
+
+            ])
+
+            table = Table(data_table)
+            table.setStyle(style_table)
+            elements.append(table)
+
+            elements.append(Spacer(1,1*inch))
+            elements.append(Spacer(1,1*inch))
+
+            #Firma
+            #elements.append(Paragraph('<font >Hola</font>', stylesheet['Title']))
+            elements.append(Spacer(1,1*inch))
+
+            doc.build(elements)
+            msg = QMessageBox()
+            msg.setWindowTitle("Alerta")
+            msg.setText("Correcta Generación de Reporte !!!")
+            x = msg.exec_()
+
+        except Exception as e:
+            print(e)
         
-        fecha= str(datetime.today().strftime('%Y-%m-%d'))
-
-        address= "Reporte_"+fecha+"_.pdf"
-        path = os.path.join(dirReport, address)
-
-        path2= os.path.join(base_path,"cap.jpeg")
-
-        doc = SimpleDocTemplate(path)
-
-        #Imagen
-        elements.append(Image(path2, width=1*inch, height=1*inch))
-
-        #Titulo
-        elements.append(Paragraph('<font >REPORTE DE TEMPERATURA</font>', stylesheet['Title']))
-
-        #Descripcion
-        elements.append(Paragraph('<font >DATOS GENERALES</font>', stylesheet['BodyText']))
-        elements.append(Paragraph('<font >Empresa: '+nom_empre+'</font> <font >         Código:  '+codigo_text+'</font>', stylesheet['BodyText']))
-        elements.append(Paragraph('<font >Fecha:  '+fecha+'</font>', stylesheet['BodyText']))
-        elements.append(Paragraph('<font ></font>', stylesheet['BodyText']))
-        
-        #Descripcion Ejes
-        elements.append(Paragraph('<font >DESCRIPCIÓN GRÁFICO</font>', stylesheet['BodyText']))
-        elements.append(Paragraph('<font >      Eje Y = Grados Centigrados / Eje X = Tiempo Minutos</font>', stylesheet['BodyText']))
-        elements.append(Paragraph('<font color=blue>        -- Sensor #1 --</font> <font color=yellow>-- Sensor #2 --</font> <font color=red>-- Sensor #3 --</font> <font color=green>-- Sensor #4 --</font> <font color=brown>-- Promedio --</font>', stylesheet['BodyText']))
-        elements.append(Spacer(1,1*inch))
-
-        
-
-        #Datos para el Gráfico
-
-        lista_temp1=[]
-        lista_temp2=[]
-        lista_temp3=[]
-        lista_temp4=[]
-        lista_total=[]
-        promedio_=[]
-
-        data_table= []
-        cabecera=[]
-        cabecera.append('No')
-        cabecera.append('Fecha')
-        cabecera.append('Hora')
-        cabecera.append('Temp 1')
-        cabecera.append('Temp 2')
-        cabecera.append('Temp 3')
-        cabecera.append('Temp 4')
-        cabecera.append('Tiempo / Minutos')
-        cabecera.append('Promedio')
-        data_table.append(cabecera)
-
-        const= df['Hora'][0]
-
-        format = '%H:%M:%S'
-        for index, row in df.iterrows():
-            diff = (datetime.strptime(str(row['Hora']), format) - datetime.strptime(str(const), format))/60
-            total_minu = round(diff.total_seconds(),1)
-
-            var_promedio = (row['Temp1'] + row['Temp2'] +row['Temp3'] + row['Temp4'])/4
-            round_promedio= round(var_promedio,2)
-            c_1= (total_minu,row['Temp1'])
-            c_2= (total_minu,row['Temp2'])
-            c_3= (total_minu,row['Temp3'])
-            c_4= (total_minu,row['Temp4'])
-            c_5= (total_minu,round_promedio)
-            lista_temp1.append(c_1)
-            lista_temp2.append(c_2)
-            lista_temp3.append(c_3)
-            lista_temp4.append(c_4)
-            promedio_.append(c_5)
-            array_aux=[]
-            array_aux.append(row['n'])
-            array_aux.append(row['Fecha'])
-            array_aux.append(row['Hora'])
-            array_aux.append(row['Temp1'])
-            array_aux.append(row['Temp2'])
-            array_aux.append(row['Temp3'])
-            array_aux.append(row['Temp4'])
-            array_aux.append(total_minu)
-            array_aux.append(round_promedio)
-            data_table.append(array_aux)
-
-
-        lista_total.append(lista_temp1)
-        lista_total.append(lista_temp2)
-        lista_total.append(lista_temp3)
-        lista_total.append(lista_temp4)
-        lista_total.append(promedio_)
-
-        elements.append(Spacer(1,1*inch))
-        elements.append(Spacer(1,1*inch))
-
-        drawing = Drawing(400, 200)
-        lp = LinePlot()
-        lp.x = 100
-        lp.y = 100
-        lp.height = 300
-        lp.width = 300
-        lp.data = lista_total
-        lp.joinedLines = 1
-        #lp.lineLabelFormat = '%2.0f' 
-        lp.strokeColor = colors.black
-        lp.xValueAxis.valueMin = 0 
-        lp.xValueAxis.valueMax = 100
-        lp.xValueAxis.valueStep = 10
-        #lp.xValueAxis.valueSteps =listHora_aux
-        lp.xValueAxis.labelTextFormat = '%2.1f'
-        lp.yValueAxis.valueMin = 0 
-        lp.yValueAxis.valueMax = 180
-        lp.yValueAxis.valueStep = 5
-        lp.lines[0].strokeColor=  colors.blue
-        lp.lines[1].strokeColor=  colors.yellow
-        lp.lines[2].strokeColor=  colors.red
-        lp.lines[3].strokeColor=  colors.green
-        lp.lines[4].strokeColor=  colors.brown
-
-        drawing.add(lp)
-
-        elements.append(drawing)
-
-        #Tabla
-        elements.append(Paragraph('<font >DESCRIPCIÓN TABLA</font>', stylesheet['BodyText']))
-        elements.append(Paragraph('<font ></font>', stylesheet['BodyText']))
-
-        style_table = TableStyle([
-            ('BACKGROUND',(0,0),(8,0),colors.green),
-            ('TEXTCOLOR',(0,0),(-1,0),colors.whitesmoke),
-            ('ALIGN',(0,0),(8,1000000),'CENTER'),
-            ('FONTNAME',(0,0),(-1,0),'Courier-Bold')
-
-        ])
-
-        table = Table(data_table)
-        table.setStyle(style_table)
-        elements.append(table)
-
-        elements.append(Spacer(1,1*inch))
-        elements.append(Spacer(1,1*inch))
-
-        #Firma
-        #elements.append(Paragraph('<font >Hola</font>', stylesheet['Title']))
-        elements.append(Spacer(1,1*inch))
-
-        doc.build(elements)
-        msg = QMessageBox()
-        msg.setWindowTitle("Alerta")
-        msg.setText("Correcta Generación de Reporte !!!")
-        x = msg.exec_()
-
 #if __name__ == "__main__":
 #    import sys
 def main():
