@@ -144,7 +144,7 @@ class Ui_MainWindow(object):
                 if filename[0]!='':
                     dirReport=os.path.dirname(filename[0])
                     df = pandas.read_csv(filename[0])
-                    self.MultipleHorno(df)
+                    self.MultipleHorno(df,dirReport)
                     #Generar reporte
                 else:
                     msg.setText("Por favor seleccionar el archivo CSV")
@@ -155,26 +155,38 @@ class Ui_MainWindow(object):
             x = msg.exec_()
             print(e)
 
-    def MultipleHorno(self,df):
+    def MultipleHorno(self,df,dirReport):
         #Graficar valores
         
         valores_horno= df['Horno'].drop_duplicates().count()
         if(int(valores_horno)==1):
-            print("aqui")
+            #print("aqui")
             const= df['Hora'][0]
-            self.Graficar(df,const)
+            self.Graficar(df,const,dirReport)
         else:
-            if(int(valores_horno)==2):
-                print("aqui 2")
-                df_horno1=df.loc[(df.Horno == 1)]
-                const_1= df_horno1['Hora'][0]
-                self.Graficar(df_horno1,const_1)
-                df_horno2=df.loc[(df.Horno == 2)]
-                const_2= df_horno2['Hora'][0]
-                self.Graficar(df_horno2,const_2)
-                
+            try:
+                if(int(valores_horno)==2):
+                    print("aqui 2")
+                    df_horno1= df.query('Horno == 1 ')
+                    dh_1=df_horno1.reset_index(drop=True)
+                    const_1=dh_1["Hora"].loc[0]
+                    self.HORNO='1'
+                    self.Graficar(dh_1,const_1,dirReport)
 
-    def Graficar(self,df,const):
+
+
+                    
+                    df_horno2= df.query('Horno == 2 ')
+                    dh_2=df_horno2.reset_index(drop=True)
+                    const_2=dh_2["Hora"].loc[0]
+                    self.HORNO='2'
+                    self.Graficar(dh_2,const_2,dirReport)
+                
+            except Exception as e:
+                print(e)
+                print("asad")
+
+    def Graficar(self,df,const,dirReport):
         tiempo_aux=[]
         format = '%H:%M:%S'
         promedio=[]
@@ -227,7 +239,7 @@ class Ui_MainWindow(object):
         try:
             fecha= str(datetime.today().strftime('%Y-%m-%d'))
 
-            address= "Reporte_"+fecha+"_.pdf"
+            address= "Reporte_"+fecha+"_horno_"+self.HORNO+".pdf"
             path = os.path.join(dirReport, address)
 
             path2= os.path.join(base_path,"cap.jpeg")
@@ -243,6 +255,7 @@ class Ui_MainWindow(object):
             #Descripcion
             elements.append(Paragraph('<font >DATOS GENERALES</font>', stylesheet['BodyText']))
             elements.append(Paragraph('<font >Empresa: '+nom_empre+'</font> <font >         Código:  '+codigo_text+'</font>', stylesheet['BodyText']))
+            elements.append(Paragraph('<font >Horno:  '+self.HORNO+'</font>', stylesheet['BodyText']))
             elements.append(Paragraph('<font >Fecha:  '+fecha+'</font>', stylesheet['BodyText']))
             elements.append(Paragraph('<font ></font>', stylesheet['BodyText']))
             
@@ -373,6 +386,7 @@ class Ui_MainWindow(object):
 
         except Exception as e:
             print(e)
+            print("fin2")
         
 #if __name__ == "__main__":
 #    import sys
