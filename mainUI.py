@@ -39,6 +39,8 @@ class Ui_MainWindow(object):
         self.TEMPERATURA2_='Temp2'
         self.TEMPERATURA3_='Temp3'
         self.TEMPERATURA4_='Temp4'
+        self.COLOR_G1='#2196F3'
+        self.COLOR_G2='#f32121'
         self.HORNO=''
 
     def setupUi(self, MainWindow):
@@ -90,25 +92,7 @@ class Ui_MainWindow(object):
         self.label_sensor2.setGeometry(QtCore.QRect(var_x+380,var_y, 150, 20))
         self.label_sensor2.setObjectName("label_sensor2")
         self.label_sensor2.setFont(QtGui.QFont("Times", 22, QtGui.QFont.Bold))
-        self.label_sensor2.setStyleSheet('color: yellow')
-
-        self.label_sensor3 = QtWidgets.QLabel(self.centralwidget)
-        self.label_sensor3.setGeometry(QtCore.QRect(var_x+540,var_y, 150, 20))
-        self.label_sensor3.setObjectName("label_sensor3")
-        self.label_sensor3.setFont(QtGui.QFont("Times", 22, QtGui.QFont.Bold))
-        self.label_sensor3.setStyleSheet('color: red')
-
-        self.label_sensor4 = QtWidgets.QLabel(self.centralwidget)
-        self.label_sensor4.setGeometry(QtCore.QRect(var_x+700,var_y, 150, 20))
-        self.label_sensor4.setObjectName("label_sensor4")
-        self.label_sensor4.setFont(QtGui.QFont("Times", 22, QtGui.QFont.Bold))
-        self.label_sensor4.setStyleSheet('color: green')
-
-        self.label_promedio = QtWidgets.QLabel(self.centralwidget)
-        self.label_promedio.setGeometry(QtCore.QRect(var_x+860,var_y, 150, 20))
-        self.label_promedio.setObjectName("label_promedio")
-        self.label_promedio.setFont(QtGui.QFont("Times", 22, QtGui.QFont.Bold))
-        self.label_promedio.setStyleSheet('color: brown')
+        self.label_sensor2.setStyleSheet('color: red')
 
         self.graphicsView = GraphicsLayoutWidget(self.centralwidget)
         self.graphicsView.setGeometry(QtCore.QRect(100, 100, 1300, 700))
@@ -160,35 +144,29 @@ class Ui_MainWindow(object):
         
         valores_horno= df['Horno'].drop_duplicates().count()
         if(int(valores_horno)==1):
-            print("aqui")
             const= df['Hora'][0]
             horno= df['Horno'][0]
             self.HORNO=str(horno)
-            self.Graficar(df,const,dirReport)
+            self.Graficar(df,const,dirReport,self.COLOR_G1)
         else:
             try:
                 if(int(valores_horno)==2):
-                    print("aqui 2")
                     df_horno1= df.query('Horno == 1 ')
                     dh_1=df_horno1.reset_index(drop=True)
                     const_1=dh_1["Hora"].loc[0]
                     self.HORNO='1'
-                    self.Graficar(dh_1,const_1,dirReport)
-
-
-
-                    
+                    self.Graficar(dh_1,const_1,dirReport,self.COLOR_G1)
                     df_horno2= df.query('Horno == 2 ')
                     dh_2=df_horno2.reset_index(drop=True)
                     const_2=dh_2["Hora"].loc[0]
                     self.HORNO='2'
-                    self.Graficar(dh_2,const_2,dirReport)
+                    self.Graficar(dh_2,const_2,dirReport,self.COLOR_G2)
                 
             except Exception as e:
                 print(e)
                 print("asad")
 
-    def Graficar(self,df,const,dirReport):
+    def Graficar(self,df,const,dirReport,color):
         tiempo_aux=[]
         format = '%H:%M:%S'
         promedio=[]
@@ -202,7 +180,7 @@ class Ui_MainWindow(object):
         
         x=tiempo_aux
         y=promedio
-        self.graphicsView.plot(x, y,pen='#2196F3')
+        self.graphicsView.plot(x, y,pen=color)
         self.graphicsView.setLabel("bottom", "X = Tiempo (Minutos) / Y = Grados (Centigrados)")
         self.generatedReport(df,dirReport)
 
@@ -214,11 +192,8 @@ class Ui_MainWindow(object):
         self.graphicsView = self.graphicsView.addPlot(row=1, col=1)
         self.label_cod.setText(_translate("MainWindow", "Código:"))
         self.label_nom_empre.setText(_translate("MainWindow", "Nombre de Empresa:"))
-        self.label_sensor1.setText(_translate("MainWindow", "--- Sensor #1 ---"))
-        self.label_sensor2.setText(_translate("MainWindow", "--- Sensor #2 ---"))
-        self.label_sensor3.setText(_translate("MainWindow", "--- Sensor #3 ---"))
-        self.label_sensor4.setText(_translate("MainWindow", "--- Sensor #4 ---"))
-        self.label_promedio.setText(_translate("MainWindow", "--- Promedio ---"))
+        self.label_sensor1.setText(_translate("MainWindow", "--- Horno #1 ---"))
+        self.label_sensor2.setText(_translate("MainWindow", "--- Horno #2 ---"))
 
     def generatedReport(self,df,dirReport):
 
