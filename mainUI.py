@@ -160,8 +160,10 @@ class Ui_MainWindow(object):
         
         valores_horno= df['Horno'].drop_duplicates().count()
         if(int(valores_horno)==1):
-            #print("aqui")
+            print("aqui")
             const= df['Hora'][0]
+            horno= df['Horno'][0]
+            self.HORNO=str(horno)
             self.Graficar(df,const,dirReport)
         else:
             try:
